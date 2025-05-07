@@ -53,6 +53,8 @@ static void wdt_sam_isr(const struct device *dev)
 
 	/* Clear status bit to acknowledge interrupt by dummy read. */
 	wdt_sr = wdt->WDT_SR;
+	LOG_INF("WDT_SR: 0x%x", wdt_sr);
+	LOG_INF("WDT_MR: 0x%x", wdt->WDT_MR);
 
 	data->cb(dev, 0);
 }

@@ -12,6 +12,7 @@
 #include <zephyr/drivers/watchdog.h>
 #include <zephyr/sys/printk.h>
 #include <stdbool.h>
+#include <zephyr/kernel.h>
 
 #define WDT_FEED_TRIES 5
 
@@ -98,7 +99,7 @@ int main(void)
 
 	struct wdt_timeout_cfg wdt_config = {
 		/* Reset SoC when watchdog timer expires. */
-		.flags = WDT_FLAG_RESET_SOC,
+		.flags = WDT_FLAG_RESET_NONE,
 
 		/* Expire watchdog after max window */
 		.window.min = WDT_MIN_WINDOW,
@@ -113,6 +114,8 @@ int main(void)
 #else /* WDT_ALLOW_CALLBACK */
 	printk("Callback in RESET_SOC disabled for this platform\n");
 #endif /* WDT_ALLOW_CALLBACK */
+
+	k_msleep(250);
 
 	wdt_channel_id = wdt_install_timeout(wdt, &wdt_config);
 	if (wdt_channel_id == -ENOTSUP) {
@@ -138,16 +141,9 @@ int main(void)
 #endif
 	/* Feeding watchdog. */
 	printk("Feeding watchdog %d times\n", WDT_FEED_TRIES);
-	for (int i = 0; i < WDT_FEED_TRIES; ++i) {
-		printk("Feeding watchdog...\n");
+	while(1) {
 		wdt_feed(wdt, wdt_channel_id);
 		k_sleep(K_MSEC(WDG_FEED_INTERVAL));
-	}
-
-	/* Waiting for the SoC reset. */
-	printk("Waiting for reset...\n");
-	while (1) {
-		k_yield();
 	}
 	return 0;
 }
